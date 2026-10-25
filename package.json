@@ -1,6 +1,6 @@
 {
   "name": "@farazlabs/topichub-client",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "TypeScript client for ManagedDotNet.SignalR.Topics — fluent topic bindings over Handle(topic, payload).",
   "type": "module",
   "sideEffects": false,
