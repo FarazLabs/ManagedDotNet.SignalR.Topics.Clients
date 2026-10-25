@@ -44,7 +44,8 @@
     "test:dist": "pnpm build && vitest run tests/dist"
   },
   "publishConfig": {
-    "registry": "https://npm.pkg.github.com"
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
   },
   "keywords": [
     "signalr",

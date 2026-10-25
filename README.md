@@ -2,7 +2,7 @@
 
 TypeScript client for [ManagedDotNet.SignalR.Topics](https://github.com/FarazLabs/ManagedDotNet.SignalR.Topics): fluent topic bindings over the shared wire contract `Handle(topic, payload)`.
 
-Published to **GitHub Packages** as `@farazlabs/topichub-client` only (private when the repo is private). Every push to `main` that passes CI bumps the patch version and publishes.
+Published to **npm** as [`@farazlabs/topichub-client`](https://www.npmjs.com/package/@farazlabs/topichub-client). Every push to `main` that passes CI bumps the patch version and publishes.
 
 ## Wire contract
 
@@ -31,15 +31,7 @@ Authorization, CORS, `MapTopicHubs`, and DI are **not** mirrored — server-only
 
 `@microsoft/signalr` is a normal dependency (installed transitively). Node **22.18+** (or 24.11+ / 26+) if you run TypeScript with `--experimental-strip-types`.
 
-### From GitHub Packages
-
-Create a PAT (classic) with `read:packages` (and `repo` if the repo is private). In the consuming project:
-
-```ini
-# .npmrc
-@farazlabs:registry=https://npm.pkg.github.com
-//npm.pkg.github.com/:_authToken=YOUR_GITHUB_PAT
-```
+### From npm
 
 ```bash
 pnpm add @farazlabs/topichub-client
@@ -55,7 +47,7 @@ pnpm build
 
 ## Publishing
 
-Automated: push to `main` → CI verify → patch bump → `pnpm publish` to `https://npm.pkg.github.com`. No secrets beyond the default `GITHUB_TOKEN`. Version commits use `[skip ci]` so they do not republish.
+Automated: push to `main` → CI verify → patch bump → `pnpm publish --access public` to the npm registry. Requires repo secret `NPM_TOKEN` (granular npm token with publish rights for `@farazlabs/*`). Version commits use `[skip ci]` so they do not republish.
 
 ## Quick start
 
