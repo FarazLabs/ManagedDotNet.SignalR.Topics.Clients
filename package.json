@@ -1,6 +1,6 @@
 {
   "name": "manageddotnet-topichub-client",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "TypeScript client for ManagedDotNet.SignalR.Topics — fluent topic bindings over Handle(topic, payload).",
   "type": "module",
   "sideEffects": false,
