@@ -1,42 +1,29 @@
-import type { MessageType, Serializer } from "../types.js";
+import type { Serializer } from "../types.js";
 
 /**
  * Fluent config for one client → server topic (mirrors server HandleOnServer,
  * with WithSerializer instead of WithDeserializer / WithHandler).
+ * Topic is supplied to handleOnServer as the first argument.
  */
 export class HandleOnServerConfiguration<T> {
-  private _topic: string | undefined;
   private _serializer: Serializer<T> | undefined;
 
   public constructor
   (
-    private readonly _messageType: MessageType<T>,
+    private readonly _topic: string,
   )
   {
+    if (_topic.trim().length === 0) {
+      throw new Error("HandleOnServer requires a non-empty topic.");
+    }
   }
 
-  public get messageType(): MessageType<T> {
-    return this._messageType;
-  }
-
-  public get topic(): string | undefined {
+  public get topic(): string {
     return this._topic;
   }
 
   public get serializer(): Serializer<T> | undefined {
     return this._serializer;
-  }
-
-  /**
-   * Required — topic string passed as the first Handle argument.
-   */
-  public withTopic(topic: string): this {
-    if (topic.trim().length === 0) {
-      throw new Error(`WithTopic requires a non-empty topic for message type "${this._messageType.name}".`);
-    }
-
-    this._topic = topic;
-    return this;
   }
 
   /**
@@ -48,10 +35,6 @@ export class HandleOnServerConfiguration<T> {
   }
 
   public ensureIsValid(): void {
-    if (this._topic === undefined || this._topic.trim().length === 0) {
-      throw new Error(
-        `HandleOnServer for "${this._messageType.name}" is missing WithTopic.`,
-      );
-    }
+    // Topic is validated in the constructor.
   }
 }

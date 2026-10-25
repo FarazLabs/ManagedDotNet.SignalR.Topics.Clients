@@ -4,9 +4,7 @@ export type { ITopicHubClient } from "./ITopicHubClient.js";
 export { TopicHubClientBuilder } from "./configuration/TopicHubClientBuilder.js";
 export { HandleOnServerConfiguration } from "./configuration/HandleOnServerConfiguration.js";
 export { HandleOnClientConfiguration } from "./configuration/HandleOnClientConfiguration.js";
-export { defineMessageType } from "./types.js";
 export type {
-  MessageType,
   ClientHandler,
   ClientHandlerContext,
   Serializer,

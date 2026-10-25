@@ -7,7 +7,6 @@ import {
 import type { ITopicHubClient } from "./ITopicHubClient.js";
 import type {
   ClientBinding,
-  MessageType,
   ServerBinding,
   TopicHubClientOptions,
 } from "./types.js";
@@ -19,7 +18,6 @@ const HANDLE_METHOD: string = "Handle";
  */
 export class TopicHubClient implements ITopicHubClient {
   private _connection: HubConnection | undefined;
-  private readonly _serverByTypeName: Map<string, ServerBinding> = new Map<string, ServerBinding>();
   private readonly _serverByTopic: Map<string, ServerBinding> = new Map<string, ServerBinding>();
   private readonly _clientByTopic: Map<string, ClientBinding> = new Map<string, ClientBinding>();
 
@@ -31,7 +29,6 @@ export class TopicHubClient implements ITopicHubClient {
   )
   {
     for (const binding of serverBindings) {
-      this._serverByTypeName.set(binding.messageType.name, binding);
       this._serverByTopic.set(binding.topic, binding);
     }
 
@@ -82,17 +79,7 @@ export class TopicHubClient implements ITopicHubClient {
     await connection.stop();
   }
 
-  public async send<T>(messageType: MessageType<T>, payload: T): Promise<void> {
-    const binding: ServerBinding | undefined = this._serverByTypeName.get(messageType.name);
-    if (binding === undefined) {
-      throw new Error(`No HandleOnServer registration for message type "${messageType.name}".`);
-    }
-
-    const wire: string = binding.serialize(payload);
-    await this.invokeHandle(binding.topic, wire);
-  }
-
-  public async invoke(topic: string, payload: unknown): Promise<void> {
+  public async send(topic: string, payload: unknown): Promise<void> {
     const binding: ServerBinding | undefined = this._serverByTopic.get(topic);
     const wire: string =
       binding !== undefined ? binding.serialize(payload) : JSON.stringify(payload);

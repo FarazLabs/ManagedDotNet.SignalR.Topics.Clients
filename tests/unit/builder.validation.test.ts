@@ -1,77 +1,57 @@
 import { describe, expect, it, vi } from "vitest";
-import { createTopicHubClient, defineMessageType } from "../../src/index.js";
+import { createTopicHubClient } from "../../src/index.js";
 
 type Outbound = { value: string };
 type Inbound = { id: number };
 
-const Out = defineMessageType<Outbound>("Out");
-const In = defineMessageType<Inbound>("In");
-
 describe("TopicHubClientBuilder validation", () => {
-  it("requires WithTopic on HandleOnServer", () => {
+  it("rejects empty HandleOnServer topic", () => {
     expect(() =>
       createTopicHubClient({ getUrl: () => "http://localhost/hub" })
-        .handleOnServer(Out, () => {
-          /* missing withTopic */
-        })
+        .handleOnServer<Outbound>("   ", () => undefined)
         .build(),
-    ).toThrow(/missing WithTopic/);
+    ).toThrow(/non-empty topic/);
   });
 
-  it("requires WithTopic and WithHandler on HandleOnClient", () => {
+  it("rejects empty HandleOnClient topic", () => {
     expect(() =>
       createTopicHubClient({ getUrl: () => "http://localhost/hub" })
-        .handleOnClient(In, (cfg) => cfg.withTopic("in"))
+        .handleOnClient<Inbound>("", () => undefined)
+        .build(),
+    ).toThrow(/non-empty topic/);
+  });
+
+  it("requires WithHandler on HandleOnClient", () => {
+    expect(() =>
+      createTopicHubClient({ getUrl: () => "http://localhost/hub" })
+        .handleOnClient<Inbound>("in", () => undefined)
         .build(),
     ).toThrow(/missing WithHandler/);
   });
 
   it("rejects duplicate HandleOnServer topics", () => {
-    const Other = defineMessageType<Outbound>("Other");
     expect(() =>
       createTopicHubClient({ getUrl: () => "http://localhost/hub" })
-        .handleOnServer(Out, (cfg) => cfg.withTopic("same"))
-        .handleOnServer(Other, (cfg) => cfg.withTopic("same"))
+        .handleOnServer<Outbound>("same", () => undefined)
+        .handleOnServer<Outbound>("same", () => undefined)
         .build(),
     ).toThrow(/Duplicate HandleOnServer topic/);
   });
 
-  it("rejects duplicate HandleOnServer message types", () => {
-    expect(() =>
-      createTopicHubClient({ getUrl: () => "http://localhost/hub" })
-        .handleOnServer(Out, (cfg) => cfg.withTopic("a"))
-        .handleOnServer(Out, (cfg) => cfg.withTopic("b"))
-        .build(),
-    ).toThrow(/Duplicate HandleOnServer message type/);
-  });
-
   it("rejects duplicate HandleOnClient topics", () => {
-    const Other = defineMessageType<Inbound>("OtherIn");
     expect(() =>
       createTopicHubClient({ getUrl: () => "http://localhost/hub" })
-        .handleOnClient(In, (cfg) => cfg.withTopic("same").withHandler(() => undefined))
-        .handleOnClient(Other, (cfg) => cfg.withTopic("same").withHandler(() => undefined))
+        .handleOnClient<Inbound>("same", (cfg) => cfg.withHandler(() => undefined))
+        .handleOnClient<Inbound>("same", (cfg) => cfg.withHandler(() => undefined))
         .build(),
     ).toThrow(/Duplicate HandleOnClient topic/);
-  });
-
-  it("rejects empty topic strings", () => {
-    expect(() =>
-      createTopicHubClient({ getUrl: () => "http://localhost/hub" })
-        .handleOnServer(Out, (cfg) => cfg.withTopic("   "))
-        .build(),
-    ).toThrow(/non-empty topic/);
-  });
-
-  it("rejects empty message type names", () => {
-    expect(() => defineMessageType("")).toThrow(/non-empty/);
   });
 
   it("builds successfully with valid server and client bindings", () => {
     const handler = vi.fn();
     const hub = createTopicHubClient({ getUrl: () => "http://localhost/hub" })
-      .handleOnServer(Out, (cfg) => cfg.withTopic("out"))
-      .handleOnClient(In, (cfg) => cfg.withTopic("in").withHandler(handler))
+      .handleOnServer<Outbound>("out", () => undefined)
+      .handleOnClient<Inbound>("in", (cfg) => cfg.withHandler(handler))
       .build();
 
     expect(hub).toBeDefined();

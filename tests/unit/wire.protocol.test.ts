@@ -1,12 +1,9 @@
 import { HubConnectionState } from "@microsoft/signalr";
 import { describe, expect, it, vi } from "vitest";
-import { createTopicHubClient, defineMessageType } from "../../src/index.js";
+import { createTopicHubClient } from "../../src/index.js";
 
 type Outbound = { text: string };
 type Inbound = { id: number };
-
-const Out = defineMessageType<Outbound>("Out");
-const In = defineMessageType<Inbound>("In");
 
 type HandleListener = (topic: string, payload: string) => void;
 
@@ -61,11 +58,11 @@ describe("TopicHubClient wire protocol", () => {
       getUrl: () => "http://localhost/hub",
       createHubConnection: () => connection as never,
     })
-      .handleOnServer(Out, (cfg) => cfg.withTopic("chats/messages"))
+      .handleOnServer<Outbound>("chats/messages", () => undefined)
       .build();
 
     await hub.connect();
-    await hub.send(Out, { text: "hi" });
+    await hub.send("chats/messages", { text: "hi" });
 
     expect(connection.invoke).toHaveBeenCalledWith(
       "Handle",
@@ -80,14 +77,31 @@ describe("TopicHubClient wire protocol", () => {
       getUrl: () => "http://localhost/hub",
       createHubConnection: () => connection as never,
     })
-      .handleOnServer(Out, (cfg) =>
-        cfg.withTopic("plain").withSerializer((m) => m.text))
+      .handleOnServer<Outbound>("plain", (cfg) =>
+        cfg.withSerializer((m) => m.text))
       .build();
 
     await hub.connect();
-    await hub.send(Out, { text: "raw" });
+    await hub.send("plain", { text: "raw" });
 
     expect(connection.invoke).toHaveBeenCalledWith("Handle", "plain", "raw");
+  });
+
+  it("JSON.stringifies when send topic has no HandleOnServer binding", async () => {
+    const { connection } = createMockConnection();
+    const hub = createTopicHubClient({
+      getUrl: () => "http://localhost/hub",
+      createHubConnection: () => connection as never,
+    }).build();
+
+    await hub.connect();
+    await hub.send("unregistered", { text: "x" });
+
+    expect(connection.invoke).toHaveBeenCalledWith(
+      "Handle",
+      "unregistered",
+      JSON.stringify({ text: "x" }),
+    );
   });
 
   it("dispatches inbound Handle to the matching handler", async () => {
@@ -98,8 +112,8 @@ describe("TopicHubClient wire protocol", () => {
       getUrl: () => "http://localhost/hub",
       createHubConnection: () => connection as never,
     })
-      .handleOnClient(In, (cfg) =>
-        cfg.withTopic("chats/messages/ack").withHandler((msg) => {
+      .handleOnClient<Inbound>("chats/messages/ack", (cfg) =>
+        cfg.withHandler((msg) => {
           received.push(msg);
         }))
       .build();
@@ -118,9 +132,8 @@ describe("TopicHubClient wire protocol", () => {
       getUrl: () => "http://localhost/hub",
       createHubConnection: () => connection as never,
     })
-      .handleOnClient(In, (cfg) =>
+      .handleOnClient<Inbound>("alert", (cfg) =>
         cfg
-          .withTopic("alert")
           .withDeserializer((raw) => ({ id: Number(raw) }))
           .withHandler((msg) => {
             received.push(msg);
@@ -139,7 +152,7 @@ describe("TopicHubClient wire protocol", () => {
       getUrl: () => "http://localhost/hub",
       createHubConnection: () => connection as never,
     })
-      .handleOnClient(In, (cfg) => cfg.withTopic("known").withHandler(() => undefined))
+      .handleOnClient<Inbound>("known", (cfg) => cfg.withHandler(() => undefined))
       .build();
 
     await hub.connect();
@@ -154,8 +167,8 @@ describe("TopicHubClient wire protocol", () => {
       getUrl: () => "http://localhost/hub",
       createHubConnection: () => connection as never,
     })
-      .handleOnClient(In, (cfg) =>
-        cfg.withTopic("boom").withHandler(() => {
+      .handleOnClient<Inbound>("boom", (cfg) =>
+        cfg.withHandler(() => {
           throw new Error("handler failed");
         }))
       .build();
@@ -167,46 +180,16 @@ describe("TopicHubClient wire protocol", () => {
     consoleError.mockRestore();
   });
 
-  it("invoke uses topic serializer when registered", async () => {
-    const { connection } = createMockConnection();
-    const hub = createTopicHubClient({
-      getUrl: () => "http://localhost/hub",
-      createHubConnection: () => connection as never,
-    })
-      .handleOnServer(Out, (cfg) =>
-        cfg.withTopic("t").withSerializer((m) => `x:${m.text}`))
-      .build();
-
-    await hub.connect();
-    await hub.invoke("t", { text: "a" });
-
-    expect(connection.invoke).toHaveBeenCalledWith("Handle", "t", "x:a");
-  });
-
   it("send before connect throws", async () => {
     const { connection } = createMockConnection();
     const hub = createTopicHubClient({
       getUrl: () => "http://localhost/hub",
       createHubConnection: () => connection as never,
     })
-      .handleOnServer(Out, (cfg) => cfg.withTopic("t"))
+      .handleOnServer<Outbound>("t", () => undefined)
       .build();
 
-    await expect(hub.send(Out, { text: "nope" })).rejects.toThrow(/not connected/);
-  });
-
-  it("send with unknown message type throws", async () => {
-    const { connection } = createMockConnection();
-    const Unknown = defineMessageType<Outbound>("Unknown");
-    const hub = createTopicHubClient({
-      getUrl: () => "http://localhost/hub",
-      createHubConnection: () => connection as never,
-    })
-      .handleOnServer(Out, (cfg) => cfg.withTopic("t"))
-      .build();
-
-    await hub.connect();
-    await expect(hub.send(Unknown, { text: "x" })).rejects.toThrow(/No HandleOnServer/);
+    await expect(hub.send("t", { text: "nope" })).rejects.toThrow(/not connected/);
   });
 
   it("disconnect stops the connection", async () => {

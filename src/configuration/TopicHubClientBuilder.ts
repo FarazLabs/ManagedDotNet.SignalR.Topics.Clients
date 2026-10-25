@@ -2,7 +2,6 @@ import { TopicHubClient } from "../TopicHubClient.js";
 import type { ITopicHubClient } from "../ITopicHubClient.js";
 import type {
   ClientBinding,
-  MessageType,
   ServerBinding,
   TopicHubClientOptions,
 } from "../types.js";
@@ -22,6 +21,7 @@ function defaultDeserialize<T>(payload: string): T {
 
 /**
  * Fluent builder mirroring ManagedDotNet.SignalR.Topics AddTopicHub configuration.
+ * Topic strings are the runtime registry keys; generics type payloads only.
  */
 export class TopicHubClientBuilder {
   private readonly _serverConfigs: HandleOnServerConfiguration<unknown>[] = [];
@@ -39,11 +39,11 @@ export class TopicHubClientBuilder {
    */
   public handleOnServer<T>
   (
-    messageType: MessageType<T>,
+    topic: string,
     configure: ServerConfigure<T>,
   ): this
   {
-    const cfg: HandleOnServerConfiguration<T> = new HandleOnServerConfiguration<T>(messageType);
+    const cfg: HandleOnServerConfiguration<T> = new HandleOnServerConfiguration<T>(topic);
     configure(cfg);
     this._serverConfigs.push(cfg as HandleOnServerConfiguration<unknown>);
     return this;
@@ -54,11 +54,11 @@ export class TopicHubClientBuilder {
    */
   public handleOnClient<T>
   (
-    messageType: MessageType<T>,
+    topic: string,
     configure: ClientConfigure<T>,
   ): this
   {
-    const cfg: HandleOnClientConfiguration<T> = new HandleOnClientConfiguration<T>(messageType);
+    const cfg: HandleOnClientConfiguration<T> = new HandleOnClientConfiguration<T>(topic);
     configure(cfg);
     this._clientConfigs.push(cfg as HandleOnClientConfiguration<unknown>);
     return this;
@@ -73,27 +73,18 @@ export class TopicHubClientBuilder {
 
     const serverTopics: Set<string> = new Set<string>();
     const clientTopics: Set<string> = new Set<string>();
-    const serverTypeNames: Set<string> = new Set<string>();
-    const clientTypeNames: Set<string> = new Set<string>();
 
     for (const cfg of this._serverConfigs) {
       cfg.ensureIsValid();
-      const topic: string = cfg.topic!;
-      const typeName: string = cfg.messageType.name;
-
-      if (serverTypeNames.has(typeName)) {
-        throw new Error(`Duplicate HandleOnServer message type "${typeName}".`);
-      }
+      const topic: string = cfg.topic;
 
       if (serverTopics.has(topic)) {
         throw new Error(`Duplicate HandleOnServer topic "${topic}".`);
       }
 
-      serverTypeNames.add(typeName);
       serverTopics.add(topic);
 
       serverBindings.push({
-        messageType: cfg.messageType,
         topic,
         serialize: (cfg.serializer ?? defaultSerialize) as (message: unknown) => string,
       });
@@ -101,22 +92,15 @@ export class TopicHubClientBuilder {
 
     for (const cfg of this._clientConfigs) {
       cfg.ensureIsValid();
-      const topic: string = cfg.topic!;
-      const typeName: string = cfg.messageType.name;
-
-      if (clientTypeNames.has(typeName)) {
-        throw new Error(`Duplicate HandleOnClient message type "${typeName}".`);
-      }
+      const topic: string = cfg.topic;
 
       if (clientTopics.has(topic)) {
         throw new Error(`Duplicate HandleOnClient topic "${topic}".`);
       }
 
-      clientTypeNames.add(typeName);
       clientTopics.add(topic);
 
       clientBindings.push({
-        messageType: cfg.messageType,
         topic,
         deserialize: (cfg.deserializer ?? defaultDeserialize) as (payload: string) => unknown,
         handler: cfg.handler!,

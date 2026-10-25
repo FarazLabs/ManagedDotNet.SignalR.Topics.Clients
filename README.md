@@ -11,16 +11,14 @@ TypeScript client for [ManagedDotNet.SignalR.Topics](https://github.com/FarazLab
 
 ## Mirror of server configuration
 
-Hub-centric names match the C# package. Transforms are **inverted** on the client:
+Hub-centric names match the C# package. Transforms are **inverted** on the client. The **topic string** is the runtime registry key (TypeScript generics type payloads only and are erased at runtime).
 
 | Fluent | Server (`ManagedDotNet.SignalR.Topics`) | Client (`@manageddotnet/signalr-client`) |
 |--------|-------------------------------------------|------------------------------------------|
-| `HandleOnServer` | inbound: `WithTopic` + `WithDeserializer` + `WithHandler<T>()` | outbound: `withTopic` + `withSerializer` (no handler) |
-| `HandleOnClient` | outbound: `WithTopic` + `WithSerializer` | inbound: `withTopic` + `withDeserializer` + `withHandler(fn)` |
+| `HandleOnServer` | inbound: `WithTopic` + `WithDeserializer` + `WithHandler<T>()` | outbound: topic arg + `withSerializer` (no handler) |
+| `HandleOnClient` | outbound: `WithTopic` + `WithSerializer` | inbound: topic arg + `withDeserializer` + `withHandler(fn)` |
 
 Authorization, CORS, `MapTopicHubs`, and DI are **not** mirrored — server-only.
-
-TypeScript erases generics, so registrations take a `defineMessageType` token (the client equivalent of C# `typeof(T)`).
 
 ## Install
 
@@ -33,10 +31,7 @@ pnpm add @manageddotnet/signalr-client @microsoft/signalr
 ## Quick start
 
 ```ts
-import {
-  createTopicHubClient,
-  defineMessageType,
-} from "@manageddotnet/signalr-client";
+import { createTopicHubClient } from "@manageddotnet/signalr-client";
 
 type CreateChatMessageDto = {
   roomId: string;
@@ -49,25 +44,19 @@ type ChatMessageAckDto = {
   messageId: string;
 };
 
-const CreateChatMessage = defineMessageType<CreateChatMessageDto>("CreateChatMessage");
-const ChatMessageAck = defineMessageType<ChatMessageAckDto>("ChatMessageAck");
-
 const hub = createTopicHubClient({
   getUrl: () => "https://api.example.com/ChatHub",
   getAccessToken: () => accessToken,
 })
-  .handleOnServer(CreateChatMessage, (cfg) =>
-    cfg.withTopic("chats/messages"))
-  .handleOnClient(ChatMessageAck, (cfg) =>
-    cfg
-      .withTopic("chats/messages/ack")
-      .withHandler((ack) => {
-        console.log("ack", ack.tracker, ack.messageId);
-      }))
+  .handleOnServer<CreateChatMessageDto>("chats/messages", () => undefined)
+  .handleOnClient<ChatMessageAckDto>("chats/messages/ack", (cfg) =>
+    cfg.withHandler((ack) => {
+      console.log("ack", ack.tracker, ack.messageId);
+    }))
   .build();
 
 await hub.connect();
-await hub.send(CreateChatMessage, {
+await hub.send("chats/messages", {
   roomId: "…",
   tracker: crypto.randomUUID(),
   text: "hello",
@@ -79,9 +68,9 @@ Illustrative topics match a typical ChatModule registration; this package has **
 ## API surface
 
 - `createTopicHubClient(options)` → fluent builder
-- `handleOnServer(messageType, cfg => cfg.withTopic(…).withSerializer?(…))`
-- `handleOnClient(messageType, cfg => cfg.withTopic(…).withDeserializer?(…).withHandler(…))`
-- `build()` — validates topics/handlers; rejects duplicates
-- `ITopicHubClient`: `connect`, `disconnect`, `state`, `send(messageType, payload)`, `invoke(topic, payload)`
+- `handleOnServer<T>(topic, cfg => cfg.withSerializer?(…))`
+- `handleOnClient<T>(topic, cfg => cfg.withDeserializer?(…).withHandler(…))`
+- `build()` — validates handlers; rejects duplicate topics
+- `ITopicHubClient`: `connect`, `disconnect`, `state`, `send(topic, payload)`
 
-Defaults: `JSON.stringify` / `JSON.parse`, automatic reconnect on.
+Defaults: `JSON.stringify` / `JSON.parse`, automatic reconnect on. `send` uses the registered serializer for that topic when present; otherwise `JSON.stringify`.

@@ -1,24 +1,4 @@
 /**
- * Runtime token for a message type. TypeScript erases generics, so this is the
- * client equivalent of C# `typeof(T)` when registering HandleOnServer / HandleOnClient.
- */
-export type MessageType<T = unknown> = {
-  readonly name: string;
-  readonly __message?: T;
-};
-
-/**
- * Creates a {@link MessageType} token used as the registry key for send / handlers.
- */
-export function defineMessageType<T>(name: string): MessageType<T> {
-  if (name.trim().length === 0) {
-    throw new Error("Message type name must be a non-empty string.");
-  }
-
-  return { name };
-}
-
-/**
  * Context passed to inbound (HandleOnClient) handlers.
  */
 export type ClientHandlerContext = {
@@ -73,7 +53,6 @@ export type TopicHubClientOptions = {
  * Frozen outbound (client → server) binding after build().
  */
 export type ServerBinding<T = unknown> = {
-  messageType: MessageType<T>;
   topic: string;
   serialize: Serializer<T>;
 };
@@ -82,7 +61,6 @@ export type ServerBinding<T = unknown> = {
  * Frozen inbound (server → client) binding after build().
  */
 export type ClientBinding<T = unknown> = {
-  messageType: MessageType<T>;
   topic: string;
   deserialize: Deserializer<T>;
   handler: ClientHandler<T>;
