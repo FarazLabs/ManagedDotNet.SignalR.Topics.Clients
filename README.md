@@ -2,7 +2,7 @@
 
 TypeScript client for [ManagedDotNet.SignalR.Topics](https://github.com/FarazLabs/ManagedDotNet.SignalR.Topics): fluent topic bindings over the shared wire contract `Handle(topic, payload)`.
 
-Published to **GitHub Packages** (private when the repo is private). Every push to `main` that passes CI bumps the patch version and publishes.
+Published to **GitHub Packages** as `@farazlabs/topichub-client` only (private when the repo is private). Every push to `main` that passes CI bumps the patch version and publishes.
 
 ## Wire contract
 
