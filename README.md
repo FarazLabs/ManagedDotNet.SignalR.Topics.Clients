@@ -29,21 +29,11 @@ Authorization, CORS, `MapTopicHubs`, and DI are **not** mirrored — server-only
 
 ## Install
 
-`@microsoft/signalr` is a normal dependency (installed transitively). Node **22.18+** (or 24.11+ / 26+) if you run TypeScript with `--experimental-strip-types`.
-
-### From npm
-
 ```bash
 pnpm add manageddotnet-topichub-client
 ```
 
-### From a local sibling checkout
-
-```bash
-pnpm add file:../ManagedDotNet.SignalR.Topics.Client
-# in the client package:
-pnpm build
-```
+`@microsoft/signalr` is installed transitively. Node **22.18+** (or 24.11+ / 26+) if you run TypeScript with `--experimental-strip-types`.
 
 ## Publishing
 
@@ -92,7 +82,7 @@ await hub.connect();
 await hub.handle(new CreateChatMessageDto("…", crypto.randomUUID(), "hello"));
 ```
 
-Demo against the Topics OrderBook server: see [ManagedDotNet.SignalR.Topics/examples/Clients/ts](https://github.com/FarazLabs/ManagedDotNet.SignalR.Topics/tree/main/examples/Clients/ts).
+Demo against the Topics OrderBook server (installs this package from npm): [ManagedDotNet.SignalR.Topics/examples/Clients/ts](https://github.com/FarazLabs/ManagedDotNet.SignalR.Topics/tree/main/examples/Clients/ts).
 
 ## API surface
 
@@ -107,6 +97,13 @@ Defaults: `JSON.stringify` / `JSON.parse`, automatic reconnect on. `handle` look
 ## Development
 
 This repo uses [pnpm](https://pnpm.io) (see `packageManager` in `package.json`; `corepack enable` picks the right version).
+
+To try a local build of this package from another project:
+
+```bash
+pnpm build
+pnpm add file:../ManagedDotNet.SignalR.Topics.Client
+```
 
 | Command                             | What it does                                                                               |
 | ----------------------------------- | ------------------------------------------------------------------------------------------ |
