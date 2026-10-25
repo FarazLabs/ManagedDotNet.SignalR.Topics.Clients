@@ -15,7 +15,7 @@ Published to **GitHub Packages** (private when the repo is private). Every push 
 
 Hub-centric names match the C# package. Transforms are **inverted** on the client.
 
-| Fluent           | Server (`ManagedDotNet.SignalR.Topics`)                        | Client (`@farazlabs/topichub-client`)                           |
+| Fluent           | Server (`ManagedDotNet.SignalR.Topics`)                        | Client (`@farazlabs/topichub-client`)                          |
 | ---------------- | -------------------------------------------------------------- | -------------------------------------------------------------- |
 | `HandleOnServer` | inbound: `WithTopic` + `WithDeserializer` + `WithHandler<T>()` | outbound: message **class** + `withTopic` + `withSerializer?`  |
 | `HandleOnClient` | outbound: `WithTopic` + `WithSerializer`                       | inbound: `withTopic` + `withDeserializer?` + `withHandler(fn)` |
