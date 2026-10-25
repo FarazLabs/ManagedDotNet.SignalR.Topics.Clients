@@ -1,5 +1,5 @@
 {
-  "name": "@manageddotnet/signalr-client",
+  "name": "@farazlabs/signalr-client",
   "version": "0.1.0",
   "description": "TypeScript client for ManagedDotNet.SignalR.Topics — fluent topic bindings over Handle(topic, payload).",
   "type": "module",
@@ -44,8 +44,7 @@
     "test:dist": "pnpm build && vitest run tests/dist"
   },
   "publishConfig": {
-    "access": "public",
-    "registry": "https://registry.npmjs.org/"
+    "registry": "https://npm.pkg.github.com"
   },
   "keywords": [
     "signalr",

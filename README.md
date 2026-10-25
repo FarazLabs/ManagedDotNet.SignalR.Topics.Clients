@@ -1,6 +1,8 @@
-# `@manageddotnet/signalr-client`
+# `@farazlabs/signalr-client`
 
 TypeScript client for [ManagedDotNet.SignalR.Topics](https://github.com/FarazLabs/ManagedDotNet.SignalR.Topics): fluent topic bindings over the shared wire contract `Handle(topic, payload)`.
+
+Published to **GitHub Packages** (private when the repo is private). Every push to `main` that passes CI bumps the patch version and publishes.
 
 ## Wire contract
 
@@ -13,7 +15,7 @@ TypeScript client for [ManagedDotNet.SignalR.Topics](https://github.com/FarazLab
 
 Hub-centric names match the C# package. Transforms are **inverted** on the client.
 
-| Fluent           | Server (`ManagedDotNet.SignalR.Topics`)                        | Client (`@manageddotnet/signalr-client`)                       |
+| Fluent           | Server (`ManagedDotNet.SignalR.Topics`)                        | Client (`@farazlabs/signalr-client`)                           |
 | ---------------- | -------------------------------------------------------------- | -------------------------------------------------------------- |
 | `HandleOnServer` | inbound: `WithTopic` + `WithDeserializer` + `WithHandler<T>()` | outbound: message **class** + `withTopic` + `withSerializer?`  |
 | `HandleOnClient` | outbound: `WithTopic` + `WithSerializer`                       | inbound: `withTopic` + `withDeserializer?` + `withHandler(fn)` |
@@ -29,10 +31,18 @@ Authorization, CORS, `MapTopicHubs`, and DI are **not** mirrored — server-only
 
 Peer dependency: `@microsoft/signalr`. Node **22.18+** (or 24.11+ / 26+) if you run TypeScript with `--experimental-strip-types`.
 
-### From npm (after first publish)
+### From GitHub Packages
+
+Create a PAT (classic) with `read:packages` (and `repo` if the repo is private). In the consuming project:
+
+```ini
+# .npmrc
+@farazlabs:registry=https://npm.pkg.github.com
+//npm.pkg.github.com/:_authToken=YOUR_GITHUB_PAT
+```
 
 ```bash
-pnpm add @manageddotnet/signalr-client @microsoft/signalr
+pnpm add @farazlabs/signalr-client @microsoft/signalr
 ```
 
 ### From a local sibling checkout
@@ -45,21 +55,14 @@ pnpm build
 
 ## Publishing
 
-There is no GitHub Actions publish pipeline. Publishing is manual (same as ProjectX.Client):
-
-```bash
-pnpm verify          # also runs automatically via prepublishOnly
-pnpm publish --access public
-```
-
-Requires the [`manageddotnet`](https://www.npmjs.com/org/create) npm org and an npm token with publish rights for `@manageddotnet/*`. `files` limits the tarball to `dist`, README, and LICENSE; check it with `pnpm pack --dry-run`.
+Automated: push to `main` → CI verify → patch bump → `pnpm publish` to `https://npm.pkg.github.com`. No secrets beyond the default `GITHUB_TOKEN`. Version commits use `[skip ci]` so they do not republish.
 
 ## Quick start
 
 Outbound payloads must be **class instances** (runtime constructor identity). Avoid TypeScript parameter properties if you use Node strip-types.
 
 ```ts
-import { createTopicHubClient } from "@manageddotnet/signalr-client";
+import { createTopicHubClient } from "@farazlabs/signalr-client";
 
 class CreateChatMessageDto {
   public readonly roomId: string;
