@@ -1,3 +1,5 @@
+import type { HubConnection } from "@microsoft/signalr";
+
 /**
  * Context passed to inbound (HandleOnClient) handlers.
  */
@@ -8,10 +10,7 @@ export type ClientHandlerContext = {
 /**
  * Inbound handler: deserialized payload plus topic context.
  */
-export type ClientHandler<T> = (
-  message: T,
-  context: ClientHandlerContext,
-) => void | Promise<void>;
+export type ClientHandler<T> = (message: T, context: ClientHandlerContext) => void | Promise<void>;
 
 /**
  * Serializes an outbound payload to the wire string.
@@ -51,5 +50,5 @@ export type TopicHubClientOptions = {
   /**
    * Test seam: supply a pre-built connection instead of HubConnectionBuilder.
    */
-  createHubConnection?: (url: string) => import("@microsoft/signalr").HubConnection;
+  createHubConnection?: (url: string) => HubConnection;
 };

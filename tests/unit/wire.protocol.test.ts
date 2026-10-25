@@ -3,21 +3,11 @@ import { describe, expect, it, vi } from "vitest";
 import { createTopicHubClient } from "../../src/index.js";
 
 class ChatMessage {
-  public constructor
-  (
-    public text: string,
-  )
-  {
-  }
+  public constructor(public text: string) {}
 }
 
 class PlainText {
-  public constructor
-  (
-    public text: string,
-  )
-  {
-  }
+  public constructor(public text: string) {}
 }
 
 type Inbound = { id: number };
@@ -38,13 +28,17 @@ function createMockConnection(): {
   let listener: HandleListener | undefined;
   const connection = {
     state: HubConnectionState.Disconnected,
-    start: vi.fn(async () => {
+    start: vi.fn((): Promise<void> => {
       connection.state = HubConnectionState.Connected;
+      return Promise.resolve();
     }),
-    stop: vi.fn(async () => {
+    stop: vi.fn((): Promise<void> => {
       connection.state = HubConnectionState.Disconnected;
+      return Promise.resolve();
     }),
-    invoke: vi.fn(async (_method: string, _topic: string, _payload: string) => undefined),
+    invoke: vi.fn((_method: string, _topic: string, _payload: string): Promise<undefined> =>
+      Promise.resolve(undefined),
+    ),
     on: vi.fn((method: string, handler: HandleListener) => {
       if (method === "Handle") {
         listener = handler;
@@ -94,8 +88,7 @@ describe("TopicHubClient wire protocol", () => {
       getUrl: () => "http://localhost/hub",
       createHubConnection: () => connection as never,
     })
-      .handleOnServer(PlainText, (cfg) =>
-        cfg.withTopic("plain").withSerializer((m) => m.text))
+      .handleOnServer(PlainText, (cfg) => cfg.withTopic("plain").withSerializer((m) => m.text))
       .build();
 
     await hub.connect();
@@ -128,7 +121,8 @@ describe("TopicHubClient wire protocol", () => {
       .handleOnClient<Inbound>((cfg) =>
         cfg.withTopic("chats/messages/ack").withHandler((msg) => {
           received.push(msg);
-        }))
+        }),
+      )
       .build();
 
     await hub.connect();
@@ -151,7 +145,8 @@ describe("TopicHubClient wire protocol", () => {
           .withDeserializer((raw) => ({ id: Number(raw) }))
           .withHandler((msg) => {
             received.push(msg);
-          }))
+          }),
+      )
       .build();
 
     await hub.connect();
@@ -166,8 +161,7 @@ describe("TopicHubClient wire protocol", () => {
       getUrl: () => "http://localhost/hub",
       createHubConnection: () => connection as never,
     })
-      .handleOnClient<Inbound>((cfg) =>
-        cfg.withTopic("known").withHandler(() => undefined))
+      .handleOnClient<Inbound>((cfg) => cfg.withTopic("known").withHandler(() => undefined))
       .build();
 
     await hub.connect();
@@ -185,7 +179,8 @@ describe("TopicHubClient wire protocol", () => {
       .handleOnClient<Inbound>((cfg) =>
         cfg.withTopic("boom").withHandler(() => {
           throw new Error("handler failed");
-        }))
+        }),
+      )
       .build();
 
     await hub.connect();

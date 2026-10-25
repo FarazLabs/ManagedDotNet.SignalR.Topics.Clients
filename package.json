@@ -28,12 +28,20 @@
   "scripts": {
     "build": "tsdown",
     "typecheck": "tsc -p tsconfig.json",
+    "prelint": "pnpm build",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "test": "vitest run tests/unit",
     "test:watch": "vitest tests/unit",
     "test:coverage": "vitest run tests/unit --coverage",
-    "verify": "pnpm typecheck && pnpm test && pnpm build",
+    "test:treeshake": "pnpm build && vitest run tests/dist/treeshake.test.ts",
+    "check:package": "node scripts/check-package.mjs",
+    "verify": "pnpm lint && pnpm format:check && pnpm typecheck && pnpm test:coverage && pnpm test:dist && pnpm check:package",
     "prepublishOnly": "pnpm verify",
-    "pack:release": "pnpm verify && pnpm pack"
+    "pack:release": "pnpm verify && pnpm pack",
+    "test:dist": "pnpm build && vitest run tests/dist"
   },
   "publishConfig": {
     "access": "public",
@@ -61,12 +69,27 @@
     "@microsoft/signalr": "^8.0.0 || ^9.0.0 || ^10.0.0"
   },
   "devDependencies": {
+    "@arethetypeswrong/cli": "^0.18.5",
+    "@eslint/js": "^10.0.1",
     "@microsoft/signalr": "^9.0.6",
     "@types/node": "^22.20.5",
     "@vitest/coverage-v8": "^5.0.3",
+    "esbuild": "^0.28.2",
+    "eslint": "^10.12.0",
+    "eslint-config-prettier": "^10.1.8",
+    "globals": "^17.13.0",
+    "prettier": "^3.9.9",
+    "publint": "^0.3.25",
+    "rollup": "^4.64.0",
     "tsdown": "^0.23.0",
     "typescript": "^5.9.2",
+    "typescript-eslint": "^8.71.0",
     "vitest": "^5.0.3"
   },
-  "packageManager": "pnpm@10.33.0"
+  "packageManager": "pnpm@10.33.0",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
+  }
 }

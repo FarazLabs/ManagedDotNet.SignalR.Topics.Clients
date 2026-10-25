@@ -4,19 +4,19 @@ TypeScript client for [ManagedDotNet.SignalR.Topics](https://github.com/FarazLab
 
 ## Wire contract
 
-| Direction | Method | Client API |
-|-----------|--------|------------|
+| Direction       | Method                                 | Client API                                               |
+| --------------- | -------------------------------------- | -------------------------------------------------------- |
 | Client → server | `Handle(string topic, string message)` | `hub.handle(instance)` → `invoke("Handle", topic, wire)` |
-| Server → client | `Handle(string topic, string payload)` | `connection.on("Handle", …)` → registered handler |
+| Server → client | `Handle(string topic, string payload)` | `connection.on("Handle", …)` → registered handler        |
 
 ## Mirror of server configuration
 
 Hub-centric names match the C# package. Transforms are **inverted** on the client.
 
-| Fluent | Server (`ManagedDotNet.SignalR.Topics`) | Client (`@manageddotnet/signalr-client`) |
-|--------|-------------------------------------------|------------------------------------------|
-| `HandleOnServer` | inbound: `WithTopic` + `WithDeserializer` + `WithHandler<T>()` | outbound: message **class** + `withTopic` + `withSerializer?` |
-| `HandleOnClient` | outbound: `WithTopic` + `WithSerializer` | inbound: `withTopic` + `withDeserializer?` + `withHandler(fn)` |
+| Fluent           | Server (`ManagedDotNet.SignalR.Topics`)                        | Client (`@manageddotnet/signalr-client`)                       |
+| ---------------- | -------------------------------------------------------------- | -------------------------------------------------------------- |
+| `HandleOnServer` | inbound: `WithTopic` + `WithDeserializer` + `WithHandler<T>()` | outbound: message **class** + `withTopic` + `withSerializer?`  |
+| `HandleOnClient` | outbound: `WithTopic` + `WithSerializer`                       | inbound: `withTopic` + `withDeserializer?` + `withHandler(fn)` |
 
 Internal registries use the same names as the server:
 
@@ -35,8 +35,6 @@ Peer dependency: `@microsoft/signalr`. Node **22.18+** (or 24.11+ / 26+) if you 
 pnpm add @manageddotnet/signalr-client @microsoft/signalr
 ```
 
-Requires the [`manageddotnet`](https://www.npmjs.com/org/create) npm org and an `NPM_TOKEN` secret on this repo (see Publishing below).
-
 ### From a local sibling checkout
 
 ```bash
@@ -45,18 +43,16 @@ pnpm add file:../ManagedDotNet.SignalR.Topics.Client @microsoft/signalr
 pnpm build
 ```
 
-### From a GitHub Release tarball
-
-```bash
-pnpm add https://github.com/FarazLabs/ManagedDotNet.SignalR.Topics.Clients/releases/download/v0.1.0/manageddotnet-signalr-client-0.1.0.tgz @microsoft/signalr
-```
-
 ## Publishing
 
-1. Create the npm organization [`manageddotnet`](https://www.npmjs.com/org/create) (scoped packages need an org/user of that name).
-2. Create a granular npm access token with publish rights for `@manageddotnet/*`.
-3. Add it as repo secret `NPM_TOKEN` on [FarazLabs/ManagedDotNet.SignalR.Topics.Clients](https://github.com/FarazLabs/ManagedDotNet.SignalR.Topics.Clients/settings/secrets/actions).
-4. Create a GitHub Release (or run the **Publish** workflow). CI runs `pnpm publish --access public`.
+There is no GitHub Actions publish pipeline. Publishing is manual (same as ProjectX.Client):
+
+```bash
+pnpm verify          # also runs automatically via prepublishOnly
+pnpm publish --access public
+```
+
+Requires the [`manageddotnet`](https://www.npmjs.com/org/create) npm org and an npm token with publish rights for `@manageddotnet/*`. `files` limits the tarball to `dist`, README, and LICENSE; check it with `pnpm pack --dry-run`.
 
 ## Quick start
 
@@ -70,13 +66,7 @@ class CreateChatMessageDto {
   public readonly tracker: string;
   public readonly text?: string;
 
-  public constructor
-  (
-    roomId: string,
-    tracker: string,
-    text?: string,
-  )
-  {
+  public constructor(roomId: string, tracker: string, text?: string) {
     this.roomId = roomId;
     this.tracker = tracker;
     this.text = text;
@@ -92,21 +82,19 @@ const hub = createTopicHubClient({
   getUrl: () => "https://api.example.com/ChatHub",
   getAccessToken: () => accessToken,
 })
-  .handleOnServer(CreateChatMessageDto, (cfg) =>
-    cfg
-      .withTopic("chats/messages"))
+  .handleOnServer(CreateChatMessageDto, (cfg) => cfg.withTopic("chats/messages"))
   .handleOnClient<ChatMessageAckDto>((cfg) =>
     cfg
       .withTopic("chats/messages/ack")
+      .withDeserializer((payload) => JSON.parse(payload) as ChatMessageAckDto)
       .withHandler((ack) => {
         console.log("ack", ack.tracker, ack.messageId);
-      }))
+      }),
+  )
   .build();
 
 await hub.connect();
-await hub.handle(
-  new CreateChatMessageDto("…", crypto.randomUUID(), "hello"),
-);
+await hub.handle(new CreateChatMessageDto("…", crypto.randomUUID(), "hello"));
 ```
 
 Demo against the Topics OrderBook server: see [ManagedDotNet.SignalR.Topics/examples/Clients/ts](https://github.com/FarazLabs/ManagedDotNet.SignalR.Topics/tree/main/examples/Clients/ts).
@@ -120,3 +108,24 @@ Demo against the Topics OrderBook server: see [ManagedDotNet.SignalR.Topics/exam
 - `ITopicHubClient`: `connect`, `disconnect`, `state`, `handle(instance)`
 
 Defaults: `JSON.stringify` / `JSON.parse`, automatic reconnect on. `handle` looks up `_handleOnServerConfigurations` by `instance.constructor`.
+
+## Development
+
+This repo uses [pnpm](https://pnpm.io) (see `packageManager` in `package.json`; `corepack enable` picks the right version).
+
+| Command                             | What it does                                                                               |
+| ----------------------------------- | ------------------------------------------------------------------------------------------ |
+| `pnpm install`                      | Install dependencies                                                                       |
+| `pnpm build`                        | Bundle `src` with [tsdown](https://tsdown.dev) into `dist/` (ESM + CJS + `.d.ts`/`.d.cts`) |
+| `pnpm typecheck`                    | `tsc --noEmit` over `src` and `tests`                                                      |
+| `pnpm lint` / `pnpm lint:fix`       | ESLint (typescript-eslint, type-aware)                                                     |
+| `pnpm format` / `pnpm format:check` | Prettier                                                                                   |
+| `pnpm test`                         | Unit tests (Vitest) against `src`                                                          |
+| `pnpm test:dist`                    | Builds, then tests the _built_ package: ESM/CJS smoke test and tree-shaking guard          |
+| `pnpm test:treeshake`               | Only the tree-shaking guard                                                                |
+| `pnpm check:package`                | `publint` + `attw` (are-the-types-wrong) on the packed tarball                             |
+| `pnpm verify`                       | Everything above, as run by CI and `prepublishOnly`                                        |
+
+### Tree-shaking guard
+
+`tests/dist/treeshake.test.ts` bundles each public runtime export _on its own_ (esbuild and Rollup) against `dist/` and asserts that only the code it needs ends up in the bundle, within a byte budget. Rollup runs without trusting `sideEffects`, so an accidental top-level side effect fails the test. Adding or renaming a public export fails the "every export has an expectation" test until you add its entry (markers + budget).

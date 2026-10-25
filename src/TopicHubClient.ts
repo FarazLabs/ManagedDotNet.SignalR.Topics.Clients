@@ -1,5 +1,5 @@
 import {
-  HubConnection,
+  type HubConnection,
   HubConnectionBuilder,
   HubConnectionState,
   LogLevel,
@@ -17,8 +17,7 @@ const HANDLE_METHOD: string = "Handle";
 export class TopicHubClient implements ITopicHubClient {
   private _connection: HubConnection | undefined;
 
-  public constructor
-  (
+  public constructor(
     private readonly _options: TopicHubClientOptions,
     private readonly _handleOnServerConfigurations: ReadonlyMap<
       MessageConstructor,
@@ -28,9 +27,7 @@ export class TopicHubClient implements ITopicHubClient {
       string,
       HandleOnClientConfiguration<unknown>
     >,
-  )
-  {
-  }
+  ) {}
 
   public get state(): HubConnectionState {
     if (this._connection === undefined) {
@@ -41,7 +38,10 @@ export class TopicHubClient implements ITopicHubClient {
   }
 
   public async connect(): Promise<void> {
-    if (this._connection !== undefined && this._connection.state !== HubConnectionState.Disconnected) {
+    if (
+      this._connection !== undefined &&
+      this._connection.state !== HubConnectionState.Disconnected
+    ) {
       return;
     }
 
@@ -109,8 +109,7 @@ export class TopicHubClient implements ITopicHubClient {
     }
 
     try {
-      const deserialize =
-        configuration.deserializer ?? ((raw: string): unknown => JSON.parse(raw));
+      const deserialize = configuration.deserializer ?? ((raw: string): unknown => JSON.parse(raw));
       const message: unknown = deserialize(payload);
       await configuration.handler!(message, { topic });
     } catch (error: unknown) {
@@ -136,9 +135,9 @@ export class TopicHubClient implements ITopicHubClient {
   private createDefaultConnection(url: string): HubConnection {
     const builder: HubConnectionBuilder = new HubConnectionBuilder()
       .withUrl(url, {
-        accessTokenFactory: async (): Promise<string> => {
+        accessTokenFactory: (): Promise<string> => {
           const token: string | null | undefined = this._options.getAccessToken?.();
-          return token ?? "";
+          return Promise.resolve(token ?? "");
         },
       })
       .configureLogging(LogLevel.Warning);

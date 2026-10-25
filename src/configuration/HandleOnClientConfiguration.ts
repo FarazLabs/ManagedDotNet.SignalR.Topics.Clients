@@ -58,9 +58,7 @@ export class HandleOnClientConfiguration<T> {
     }
 
     if (this._handler === undefined) {
-      throw new Error(
-        `HandleOnClient for topic "${this._topic}" is missing WithHandler.`,
-      );
+      throw new Error(`HandleOnClient for topic "${this._topic}" is missing WithHandler.`);
     }
   }
 }

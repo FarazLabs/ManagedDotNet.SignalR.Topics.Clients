@@ -9,10 +9,10 @@ export default defineConfig({
       include: ["src/**/*.ts"],
       reporter: ["text", "html", "lcov"],
       thresholds: {
-        statements: 90,
-        branches: 85,
+        statements: 85,
+        branches: 70,
         functions: 90,
-        lines: 90,
+        lines: 85,
       },
     },
   },

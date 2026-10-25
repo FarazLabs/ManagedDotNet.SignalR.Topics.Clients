@@ -8,12 +8,7 @@ export class HandleOnServerConfiguration<T> {
   private _topic: string | undefined;
   private _serializer: Serializer<T> | undefined;
 
-  public constructor
-  (
-    private readonly _messageType: MessageConstructor<T>,
-  )
-  {
-  }
+  public constructor(private readonly _messageType: MessageConstructor<T>) {}
 
   public get messageType(): MessageConstructor<T> {
     return this._messageType;

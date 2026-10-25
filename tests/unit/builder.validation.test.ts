@@ -2,21 +2,11 @@ import { describe, expect, it, vi } from "vitest";
 import { createTopicHubClient } from "../../src/index.js";
 
 class OutboundA {
-  public constructor
-  (
-    public value: string,
-  )
-  {
-  }
+  public constructor(public value: string) {}
 }
 
 class OutboundB {
-  public constructor
-  (
-    public value: string,
-  )
-  {
-  }
+  public constructor(public value: string) {}
 }
 
 type Inbound = { id: number };
@@ -83,10 +73,8 @@ describe("TopicHubClientBuilder validation", () => {
   it("rejects duplicate HandleOnClient topics", () => {
     expect(() =>
       createTopicHubClient({ getUrl: () => "http://localhost/hub" })
-        .handleOnClient<Inbound>((cfg) =>
-          cfg.withTopic("same").withHandler(() => undefined))
-        .handleOnClient<Inbound>((cfg) =>
-          cfg.withTopic("same").withHandler(() => undefined))
+        .handleOnClient<Inbound>((cfg) => cfg.withTopic("same").withHandler(() => undefined))
+        .handleOnClient<Inbound>((cfg) => cfg.withTopic("same").withHandler(() => undefined))
         .build(),
     ).toThrow(/Duplicate HandleOnClient topic/);
   });

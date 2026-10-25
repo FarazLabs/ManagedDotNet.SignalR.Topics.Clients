@@ -15,22 +15,15 @@ export class TopicHubClientBuilder {
   private readonly _handleOnServerConfigurations: HandleOnServerConfiguration<unknown>[] = [];
   private readonly _handleOnClientConfigurations: HandleOnClientConfiguration<unknown>[] = [];
 
-  public constructor
-  (
-    private readonly _options: TopicHubClientOptions,
-  )
-  {
-  }
+  public constructor(private readonly _options: TopicHubClientOptions) {}
 
   /**
    * Registers a client → server binding (class → WithTopic + serialize + invoke Handle).
    */
-  public handleOnServer<T>
-  (
+  public handleOnServer<T>(
     messageType: MessageConstructor<T>,
     configure: ServerConfigure<T>,
-  ): this
-  {
+  ): this {
     const cfg: HandleOnServerConfiguration<T> = new HandleOnServerConfiguration<T>(messageType);
     configure(cfg);
     cfg.ensureIsValid();
@@ -41,11 +34,7 @@ export class TopicHubClientBuilder {
   /**
    * Registers a server → client binding (WithTopic + deserialize + function handler).
    */
-  public handleOnClient<T>
-  (
-    configure: ClientConfigure<T>,
-  ): this
-  {
+  public handleOnClient<T>(configure: ClientConfigure<T>): this {
     const cfg: HandleOnClientConfiguration<T> = new HandleOnClientConfiguration<T>();
     configure(cfg);
     cfg.ensureIsValid();
@@ -57,10 +46,14 @@ export class TopicHubClientBuilder {
    * Validates bindings and returns a ready {@link ITopicHubClient}.
    */
   public build(): ITopicHubClient {
-    const handleOnServerConfigurations: Map<MessageConstructor, HandleOnServerConfiguration<unknown>> =
-      new Map<MessageConstructor, HandleOnServerConfiguration<unknown>>();
-    const handleOnClientConfigurations: Map<string, HandleOnClientConfiguration<unknown>> =
-      new Map<string, HandleOnClientConfiguration<unknown>>();
+    const handleOnServerConfigurations: Map<
+      MessageConstructor,
+      HandleOnServerConfiguration<unknown>
+    > = new Map<MessageConstructor, HandleOnServerConfiguration<unknown>>();
+    const handleOnClientConfigurations: Map<string, HandleOnClientConfiguration<unknown>> = new Map<
+      string,
+      HandleOnClientConfiguration<unknown>
+    >();
 
     const serverTopics: Set<string> = new Set<string>();
 
