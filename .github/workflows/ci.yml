@@ -40,7 +40,6 @@ jobs:
         with:
           node-version: 22
           registry-url: https://registry.npmjs.org
-          scope: "@manageddotnet"
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - name: Bump patch version
@@ -48,7 +47,7 @@ jobs:
       - name: Publish to npm
         run: |
           pnpm build
-          pnpm publish --no-git-checks --ignore-scripts --access public
+          pnpm publish --no-git-checks --ignore-scripts
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       - name: Commit version bump

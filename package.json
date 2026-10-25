@@ -1,5 +1,5 @@
 {
-  "name": "@manageddotnet/topichub-client",
+  "name": "manageddotnet-topichub-client",
   "version": "0.1.4",
   "description": "TypeScript client for ManagedDotNet.SignalR.Topics — fluent topic bindings over Handle(topic, payload).",
   "type": "module",
@@ -44,7 +44,6 @@
     "test:dist": "pnpm build && vitest run tests/dist"
   },
   "publishConfig": {
-    "access": "public",
     "registry": "https://registry.npmjs.org/"
   },
   "keywords": [

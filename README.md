@@ -1,8 +1,8 @@
-# `@manageddotnet/topichub-client`
+# `manageddotnet-topichub-client`
 
 TypeScript client for [ManagedDotNet.SignalR.Topics](https://github.com/FarazLabs/ManagedDotNet.SignalR.Topics): fluent topic bindings over the shared wire contract `Handle(topic, payload)`.
 
-Published to **npm** as [`@manageddotnet/topichub-client`](https://www.npmjs.com/package/@manageddotnet/topichub-client). Every push to `main` that passes CI bumps the patch version and publishes.
+Published to **npm** as [`manageddotnet-topichub-client`](https://www.npmjs.com/package/manageddotnet-topichub-client). Every push to `main` that passes CI bumps the patch version and publishes.
 
 ## Wire contract
 
@@ -15,7 +15,7 @@ Published to **npm** as [`@manageddotnet/topichub-client`](https://www.npmjs.com
 
 Hub-centric names match the C# package. Transforms are **inverted** on the client.
 
-| Fluent           | Server (`ManagedDotNet.SignalR.Topics`)                        | Client (`@manageddotnet/topichub-client`)                          |
+| Fluent           | Server (`ManagedDotNet.SignalR.Topics`)                        | Client (`manageddotnet-topichub-client`)                       |
 | ---------------- | -------------------------------------------------------------- | -------------------------------------------------------------- |
 | `HandleOnServer` | inbound: `WithTopic` + `WithDeserializer` + `WithHandler<T>()` | outbound: message **class** + `withTopic` + `withSerializer?`  |
 | `HandleOnClient` | outbound: `WithTopic` + `WithSerializer`                       | inbound: `withTopic` + `withDeserializer?` + `withHandler(fn)` |
@@ -34,7 +34,7 @@ Authorization, CORS, `MapTopicHubs`, and DI are **not** mirrored — server-only
 ### From npm
 
 ```bash
-pnpm add @manageddotnet/topichub-client
+pnpm add manageddotnet-topichub-client
 ```
 
 ### From a local sibling checkout
@@ -47,14 +47,14 @@ pnpm build
 
 ## Publishing
 
-Automated: push to `main` → CI verify → patch bump → `pnpm publish --access public` to the npm registry. Requires repo secret `NPM_TOKEN` (granular npm token with publish rights for `@manageddotnet/*`). Version commits use `[skip ci]` so they do not republish.
+Automated: push to `main` → CI verify → patch bump → `pnpm publish` to the npm registry. Requires repo secret `NPM_TOKEN` (granular npm token with publish rights for your npm user). Version commits use `[skip ci]` so they do not republish.
 
 ## Quick start
 
 Outbound payloads must be **class instances** (runtime constructor identity). Avoid TypeScript parameter properties if you use Node strip-types.
 
 ```ts
-import { createTopicHubClient } from "@manageddotnet/topichub-client";
+import { createTopicHubClient } from "manageddotnet-topichub-client";
 
 class CreateChatMessageDto {
   public readonly roomId: string;
