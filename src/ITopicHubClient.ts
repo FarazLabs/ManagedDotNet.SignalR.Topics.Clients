@@ -1,7 +1,7 @@
 import type { HubConnectionState } from "@microsoft/signalr";
 
 /**
- * Built topic hub client: connect, send by topic, and receive via registered handlers.
+ * Built topic hub client: connect, handle by message class, and receive via registered handlers.
  */
 export interface ITopicHubClient {
   readonly state: HubConnectionState;
@@ -11,8 +11,8 @@ export interface ITopicHubClient {
   disconnect(): Promise<void>;
 
   /**
-   * Serializes and invokes Handle(topic, payload). Uses the HandleOnServer serializer
-   * registered for {@link topic} when present; otherwise JSON.stringify.
+   * Looks up HandleOnServerConfigurations by {@link message}'s constructor, serializes,
+   * and invokes remote Handle(topic, wire) — mirrors server TopicClientProxy.Handle.
    */
-  send(topic: string, payload: unknown): Promise<void>;
+  handle(message: object): Promise<void>;
 }

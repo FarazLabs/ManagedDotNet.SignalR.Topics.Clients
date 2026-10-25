@@ -9,7 +9,6 @@ export type {
   ClientHandlerContext,
   Serializer,
   Deserializer,
+  MessageConstructor,
   TopicHubClientOptions,
-  ServerBinding,
-  ClientBinding,
 } from "./types.js";

@@ -1,29 +1,42 @@
-import type { Serializer } from "../types.js";
+import type { MessageConstructor, Serializer } from "../types.js";
 
 /**
- * Fluent config for one client → server topic (mirrors server HandleOnServer,
+ * Fluent config for one client → server binding (mirrors server HandleOnServer,
  * with WithSerializer instead of WithDeserializer / WithHandler).
- * Topic is supplied to handleOnServer as the first argument.
  */
 export class HandleOnServerConfiguration<T> {
+  private _topic: string | undefined;
   private _serializer: Serializer<T> | undefined;
 
   public constructor
   (
-    private readonly _topic: string,
+    private readonly _messageType: MessageConstructor<T>,
   )
   {
-    if (_topic.trim().length === 0) {
-      throw new Error("HandleOnServer requires a non-empty topic.");
-    }
   }
 
-  public get topic(): string {
+  public get messageType(): MessageConstructor<T> {
+    return this._messageType;
+  }
+
+  public get topic(): string | undefined {
     return this._topic;
   }
 
   public get serializer(): Serializer<T> | undefined {
     return this._serializer;
+  }
+
+  /**
+   * Required — sets the wire topic for remote Handle(topic, payload).
+   */
+  public withTopic(topic: string): this {
+    if (topic.trim().length === 0) {
+      throw new Error("HandleOnServer requires a non-empty topic.");
+    }
+
+    this._topic = topic;
+    return this;
   }
 
   /**
@@ -35,6 +48,12 @@ export class HandleOnServerConfiguration<T> {
   }
 
   public ensureIsValid(): void {
-    // Topic is validated in the constructor.
+    if (this._topic === undefined || this._topic.trim().length === 0) {
+      const name: string = this._messageType.name || "anonymous";
+      throw new Error(
+        `Topic is not configured for message type '${name}'.\n` +
+          `Use .withTopic("your-topic") to bind the message type (${name}) to a specific topic.`,
+      );
+    }
   }
 }

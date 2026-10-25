@@ -24,6 +24,11 @@ export type Serializer<T> = (message: T) => string;
 export type Deserializer<T> = (payload: string) => T;
 
 /**
+ * Runtime message class used as the HandleOnServer registry key.
+ */
+export type MessageConstructor<T = unknown> = abstract new (...args: never[]) => T;
+
+/**
  * Options for {@link createTopicHubClient}.
  */
 export type TopicHubClientOptions = {
@@ -47,21 +52,4 @@ export type TopicHubClientOptions = {
    * Test seam: supply a pre-built connection instead of HubConnectionBuilder.
    */
   createHubConnection?: (url: string) => import("@microsoft/signalr").HubConnection;
-};
-
-/**
- * Frozen outbound (client → server) binding after build().
- */
-export type ServerBinding<T = unknown> = {
-  topic: string;
-  serialize: Serializer<T>;
-};
-
-/**
- * Frozen inbound (server → client) binding after build().
- */
-export type ClientBinding<T = unknown> = {
-  topic: string;
-  deserialize: Deserializer<T>;
-  handler: ClientHandler<T>;
 };

@@ -1,31 +1,19 @@
 import { TopicHubClient } from "../TopicHubClient.js";
 import type { ITopicHubClient } from "../ITopicHubClient.js";
-import type {
-  ClientBinding,
-  ServerBinding,
-  TopicHubClientOptions,
-} from "../types.js";
+import type { MessageConstructor, TopicHubClientOptions } from "../types.js";
 import { HandleOnClientConfiguration } from "./HandleOnClientConfiguration.js";
 import { HandleOnServerConfiguration } from "./HandleOnServerConfiguration.js";
 
 type ServerConfigure<T> = (cfg: HandleOnServerConfiguration<T>) => void;
 type ClientConfigure<T> = (cfg: HandleOnClientConfiguration<T>) => void;
 
-function defaultSerialize<T>(message: T): string {
-  return JSON.stringify(message);
-}
-
-function defaultDeserialize<T>(payload: string): T {
-  return JSON.parse(payload) as T;
-}
-
 /**
  * Fluent builder mirroring ManagedDotNet.SignalR.Topics AddTopicHub configuration.
- * Topic strings are the runtime registry keys; generics type payloads only.
+ * Outbound bindings key by message class; inbound bindings key by topic string.
  */
 export class TopicHubClientBuilder {
-  private readonly _serverConfigs: HandleOnServerConfiguration<unknown>[] = [];
-  private readonly _clientConfigs: HandleOnClientConfiguration<unknown>[] = [];
+  private readonly _handleOnServerConfigurations: HandleOnServerConfiguration<unknown>[] = [];
+  private readonly _handleOnClientConfigurations: HandleOnClientConfiguration<unknown>[] = [];
 
   public constructor
   (
@@ -35,32 +23,33 @@ export class TopicHubClientBuilder {
   }
 
   /**
-   * Registers a client → server binding (serialize + invoke Handle).
+   * Registers a client → server binding (class → WithTopic + serialize + invoke Handle).
    */
   public handleOnServer<T>
   (
-    topic: string,
+    messageType: MessageConstructor<T>,
     configure: ServerConfigure<T>,
   ): this
   {
-    const cfg: HandleOnServerConfiguration<T> = new HandleOnServerConfiguration<T>(topic);
+    const cfg: HandleOnServerConfiguration<T> = new HandleOnServerConfiguration<T>(messageType);
     configure(cfg);
-    this._serverConfigs.push(cfg as HandleOnServerConfiguration<unknown>);
+    cfg.ensureIsValid();
+    this._handleOnServerConfigurations.push(cfg as HandleOnServerConfiguration<unknown>);
     return this;
   }
 
   /**
-   * Registers a server → client binding (deserialize + function handler).
+   * Registers a server → client binding (WithTopic + deserialize + function handler).
    */
   public handleOnClient<T>
   (
-    topic: string,
     configure: ClientConfigure<T>,
   ): this
   {
-    const cfg: HandleOnClientConfiguration<T> = new HandleOnClientConfiguration<T>(topic);
+    const cfg: HandleOnClientConfiguration<T> = new HandleOnClientConfiguration<T>();
     configure(cfg);
-    this._clientConfigs.push(cfg as HandleOnClientConfiguration<unknown>);
+    cfg.ensureIsValid();
+    this._handleOnClientConfigurations.push(cfg as HandleOnClientConfiguration<unknown>);
     return this;
   }
 
@@ -68,45 +57,45 @@ export class TopicHubClientBuilder {
    * Validates bindings and returns a ready {@link ITopicHubClient}.
    */
   public build(): ITopicHubClient {
-    const serverBindings: ServerBinding[] = [];
-    const clientBindings: ClientBinding[] = [];
+    const handleOnServerConfigurations: Map<MessageConstructor, HandleOnServerConfiguration<unknown>> =
+      new Map<MessageConstructor, HandleOnServerConfiguration<unknown>>();
+    const handleOnClientConfigurations: Map<string, HandleOnClientConfiguration<unknown>> =
+      new Map<string, HandleOnClientConfiguration<unknown>>();
 
     const serverTopics: Set<string> = new Set<string>();
-    const clientTopics: Set<string> = new Set<string>();
 
-    for (const cfg of this._serverConfigs) {
-      cfg.ensureIsValid();
-      const topic: string = cfg.topic;
+    for (const cfg of this._handleOnServerConfigurations) {
+      const topic: string = cfg.topic!;
+      const messageType: MessageConstructor = cfg.messageType;
 
       if (serverTopics.has(topic)) {
         throw new Error(`Duplicate HandleOnServer topic "${topic}".`);
       }
 
-      serverTopics.add(topic);
+      if (handleOnServerConfigurations.has(messageType)) {
+        throw new Error(
+          `Duplicate HandleOnServer message type "${messageType.name || "anonymous"}".`,
+        );
+      }
 
-      serverBindings.push({
-        topic,
-        serialize: (cfg.serializer ?? defaultSerialize) as (message: unknown) => string,
-      });
+      serverTopics.add(topic);
+      handleOnServerConfigurations.set(messageType, cfg);
     }
 
-    for (const cfg of this._clientConfigs) {
-      cfg.ensureIsValid();
-      const topic: string = cfg.topic;
+    for (const cfg of this._handleOnClientConfigurations) {
+      const topic: string = cfg.topic!;
 
-      if (clientTopics.has(topic)) {
+      if (handleOnClientConfigurations.has(topic)) {
         throw new Error(`Duplicate HandleOnClient topic "${topic}".`);
       }
 
-      clientTopics.add(topic);
-
-      clientBindings.push({
-        topic,
-        deserialize: (cfg.deserializer ?? defaultDeserialize) as (payload: string) => unknown,
-        handler: cfg.handler!,
-      });
+      handleOnClientConfigurations.set(topic, cfg);
     }
 
-    return new TopicHubClient(this._options, serverBindings, clientBindings);
+    return new TopicHubClient(
+      this._options,
+      handleOnServerConfigurations,
+      handleOnClientConfigurations,
+    );
   }
 }

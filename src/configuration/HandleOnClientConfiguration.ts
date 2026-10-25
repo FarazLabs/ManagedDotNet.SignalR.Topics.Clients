@@ -1,25 +1,15 @@
 import type { ClientHandler, Deserializer } from "../types.js";
 
 /**
- * Fluent config for one server → client topic (mirrors server HandleOnClient
+ * Fluent config for one server → client binding (mirrors server HandleOnClient
  * plus a function WithHandler instead of DI).
- * Topic is supplied to handleOnClient as the first argument.
  */
 export class HandleOnClientConfiguration<T> {
+  private _topic: string | undefined;
   private _deserializer: Deserializer<T> | undefined;
   private _handler: ClientHandler<T> | undefined;
 
-  public constructor
-  (
-    private readonly _topic: string,
-  )
-  {
-    if (_topic.trim().length === 0) {
-      throw new Error("HandleOnClient requires a non-empty topic.");
-    }
-  }
-
-  public get topic(): string {
+  public get topic(): string | undefined {
     return this._topic;
   }
 
@@ -29,6 +19,18 @@ export class HandleOnClientConfiguration<T> {
 
   public get handler(): ClientHandler<T> | undefined {
     return this._handler;
+  }
+
+  /**
+   * Required — sets the topic name matched on inbound Handle(topic, payload).
+   */
+  public withTopic(topic: string): this {
+    if (topic.trim().length === 0) {
+      throw new Error("HandleOnClient requires a non-empty topic.");
+    }
+
+    this._topic = topic;
+    return this;
   }
 
   /**
@@ -48,6 +50,13 @@ export class HandleOnClientConfiguration<T> {
   }
 
   public ensureIsValid(): void {
+    if (this._topic === undefined || this._topic.trim().length === 0) {
+      throw new Error(
+        `Topic is not configured for HandleOnClient.\n` +
+          `Use .withTopic("your-topic") to route inbound messages to this handler.`,
+      );
+    }
+
     if (this._handler === undefined) {
       throw new Error(
         `HandleOnClient for topic "${this._topic}" is missing WithHandler.`,
