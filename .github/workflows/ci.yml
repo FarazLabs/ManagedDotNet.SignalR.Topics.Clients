@@ -40,7 +40,7 @@ jobs:
         with:
           node-version: 22
           registry-url: https://registry.npmjs.org
-          scope: "@farazlabs"
+          scope: "@manageddotnet"
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - name: Bump patch version
