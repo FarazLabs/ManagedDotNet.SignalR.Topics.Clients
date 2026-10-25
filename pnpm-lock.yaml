@@ -7,6 +7,10 @@ settings:
 importers:
 
   .:
+    dependencies:
+      '@microsoft/signalr':
+        specifier: ^8.0.0 || ^9.0.0 || ^10.0.0
+        version: 9.0.19
     devDependencies:
       '@arethetypeswrong/cli':
         specifier: ^0.18.5
@@ -14,9 +18,6 @@ importers:
       '@eslint/js':
         specifier: ^10.0.1
         version: 10.0.1(eslint@10.13.0)
-      '@microsoft/signalr':
-        specifier: ^9.0.6
-        version: 9.0.19
       '@types/node':
         specifier: ^22.20.5
         version: 22.20.5

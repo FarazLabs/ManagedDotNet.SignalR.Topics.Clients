@@ -1,4 +1,4 @@
-# `@farazlabs/signalr-client`
+# `@farazlabs/topichub-client`
 
 TypeScript client for [ManagedDotNet.SignalR.Topics](https://github.com/FarazLabs/ManagedDotNet.SignalR.Topics): fluent topic bindings over the shared wire contract `Handle(topic, payload)`.
 
@@ -15,7 +15,7 @@ Published to **GitHub Packages** (private when the repo is private). Every push 
 
 Hub-centric names match the C# package. Transforms are **inverted** on the client.
 
-| Fluent           | Server (`ManagedDotNet.SignalR.Topics`)                        | Client (`@farazlabs/signalr-client`)                           |
+| Fluent           | Server (`ManagedDotNet.SignalR.Topics`)                        | Client (`@farazlabs/topichub-client`)                           |
 | ---------------- | -------------------------------------------------------------- | -------------------------------------------------------------- |
 | `HandleOnServer` | inbound: `WithTopic` + `WithDeserializer` + `WithHandler<T>()` | outbound: message **class** + `withTopic` + `withSerializer?`  |
 | `HandleOnClient` | outbound: `WithTopic` + `WithSerializer`                       | inbound: `withTopic` + `withDeserializer?` + `withHandler(fn)` |
@@ -29,7 +29,7 @@ Authorization, CORS, `MapTopicHubs`, and DI are **not** mirrored — server-only
 
 ## Install
 
-Peer dependency: `@microsoft/signalr`. Node **22.18+** (or 24.11+ / 26+) if you run TypeScript with `--experimental-strip-types`.
+`@microsoft/signalr` is a normal dependency (installed transitively). Node **22.18+** (or 24.11+ / 26+) if you run TypeScript with `--experimental-strip-types`.
 
 ### From GitHub Packages
 
@@ -42,13 +42,13 @@ Create a PAT (classic) with `read:packages` (and `repo` if the repo is private).
 ```
 
 ```bash
-pnpm add @farazlabs/signalr-client @microsoft/signalr
+pnpm add @farazlabs/topichub-client
 ```
 
 ### From a local sibling checkout
 
 ```bash
-pnpm add file:../ManagedDotNet.SignalR.Topics.Client @microsoft/signalr
+pnpm add file:../ManagedDotNet.SignalR.Topics.Client
 # in the client package:
 pnpm build
 ```
@@ -62,7 +62,7 @@ Automated: push to `main` → CI verify → patch bump → `pnpm publish` to `ht
 Outbound payloads must be **class instances** (runtime constructor identity). Avoid TypeScript parameter properties if you use Node strip-types.
 
 ```ts
-import { createTopicHubClient } from "@farazlabs/signalr-client";
+import { createTopicHubClient } from "@farazlabs/topichub-client";
 
 class CreateChatMessageDto {
   public readonly roomId: string;

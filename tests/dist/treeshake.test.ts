@@ -108,7 +108,7 @@ describe("package is shakeable", () => {
     expect(pkg.sideEffects).toBe(false);
   });
 
-  it("ships ESM that never imports @microsoft/signalr except as a peer", () => {
+  it("ships ESM that imports @microsoft/signalr as an external dependency", () => {
     const esm: string = readFileSync(DIST_ESM, "utf8");
     expect(esm).toMatch(/from\s+["']@microsoft\/signalr["']/);
     expect(esm).not.toMatch(/\brequire\(/);
@@ -120,7 +120,7 @@ describe("package is shakeable", () => {
 });
 
 describe("importing nothing", () => {
-  it("leaves no local code behind without trusting sideEffects (peer import only)", async () => {
+  it("leaves no local code behind without trusting sideEffects (external import only)", async () => {
     const code: string = (await bundleWithRollup(consumer([]))).trim();
     expect(code.replace(/\s/g, "")).toMatch(/^import["']@microsoft\/signalr["'];?$/);
   });
