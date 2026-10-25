@@ -22,7 +22,8 @@
   },
   "files": [
     "dist",
-    "README.md"
+    "README.md",
+    "LICENSE"
   ],
   "scripts": {
     "build": "tsdown",
@@ -30,7 +31,13 @@
     "test": "vitest run tests/unit",
     "test:watch": "vitest tests/unit",
     "test:coverage": "vitest run tests/unit --coverage",
-    "verify": "pnpm typecheck && pnpm test && pnpm build"
+    "verify": "pnpm typecheck && pnpm test && pnpm build",
+    "prepublishOnly": "pnpm verify",
+    "pack:release": "pnpm verify && pnpm pack"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
   },
   "keywords": [
     "signalr",

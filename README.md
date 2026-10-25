@@ -22,11 +22,28 @@ Authorization, CORS, `MapTopicHubs`, and DI are **not** mirrored — server-only
 
 ## Install
 
+Peer dependency: `@microsoft/signalr`.
+
+### From npm (after first publish)
+
 ```bash
 pnpm add @manageddotnet/signalr-client @microsoft/signalr
 ```
 
-`@microsoft/signalr` is a peer dependency.
+Requires the [`manageddotnet`](https://www.npmjs.com/org/create) npm org and an `NPM_TOKEN` secret on this repo (see Publishing below).
+
+### From a GitHub Release tarball
+
+```bash
+pnpm add https://github.com/FarazLabs/ManagedDotNet.SignalR.Topics.Clients/releases/download/v0.1.0/manageddotnet-signalr-client-0.1.0.tgz @microsoft/signalr
+```
+
+## Publishing
+
+1. Create the npm organization [`manageddotnet`](https://www.npmjs.com/org/create) (scoped packages need an org/user of that name).
+2. Create a granular npm access token with publish rights for `@manageddotnet/*`.
+3. Add it as repo secret `NPM_TOKEN` on [FarazLabs/ManagedDotNet.SignalR.Topics.Clients](https://github.com/FarazLabs/ManagedDotNet.SignalR.Topics.Clients/settings/secrets/actions).
+4. Create a GitHub Release (or run the **Publish** workflow). CI runs `pnpm publish --access public`.
 
 ## Quick start
 
