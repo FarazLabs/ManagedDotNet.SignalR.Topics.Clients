@@ -16,7 +16,7 @@ for (const key of Object.keys(env)) {
 const run = (command, args) =>
   execFileSync(command, args, { stdio: "inherit", env, shell: process.platform === "win32" });
 
-const dir = mkdtempSync(join(tmpdir(), "manageddotnet-signalr-pack-"));
+const dir = mkdtempSync(join(tmpdir(), "farazlabs-topichub-pack-"));
 try {
   run("pnpm", ["pack", "--pack-destination", dir]);
   const tarball = readdirSync(dir).find((file) => file.endsWith(".tgz"));
