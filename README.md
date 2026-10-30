@@ -66,6 +66,10 @@ type ChatMessageAckDto = {
 const hub = createTopicHubClient({
   getUrl: () => "https://api.example.com/ChatHub",
   getAccessToken: () => accessToken,
+  // Host refreshes+persists; no-op when access is still valid. Never pass the refresh token here.
+  rotateTokens: async () => {
+    /* if near expiry: refresh via your HTTP client, then accessToken = login.accessToken */
+  },
 })
   .handleOnServer(CreateChatMessageDto, (cfg) => cfg.withTopic("chats/messages"))
   .handleOnClient<ChatMessageAckDto>((cfg) =>
@@ -92,7 +96,7 @@ Demo against the Topics OrderBook server (installs this package from npm): [Mana
 - `build()` — validates handlers; rejects duplicate topics / message classes
 - `ITopicHubClient`: `connect`, `disconnect`, `state`, `handle(instance)`
 
-Defaults: `JSON.stringify` / `JSON.parse`, automatic reconnect on. `handle` looks up `_handleOnServerConfigurations` by `instance.constructor`.
+Defaults: `JSON.stringify` / `JSON.parse`, automatic reconnect on. `handle` looks up `_handleOnServerConfigurations` by `instance.constructor`. Optional `rotateTokens` runs before each access-token read and once after a 401 on `connect()`.
 
 ## Development
 

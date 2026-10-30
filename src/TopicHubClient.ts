@@ -4,6 +4,7 @@ import {
   HubConnectionState,
   LogLevel,
 } from "@microsoft/signalr";
+import { isUnauthorizedError, resolveAccessToken } from "./accessToken.js";
 import type { HandleOnClientConfiguration } from "./configuration/HandleOnClientConfiguration.js";
 import type { HandleOnServerConfiguration } from "./configuration/HandleOnServerConfiguration.js";
 import type { ITopicHubClient } from "./ITopicHubClient.js";
@@ -60,7 +61,21 @@ export class TopicHubClient implements ITopicHubClient {
     });
 
     this._connection = connection;
-    await connection.start();
+
+    try {
+      await connection.start();
+    } catch (error: unknown) {
+      if (
+        !isUnauthorizedError(error) ||
+        this._options.rotateTokens === undefined
+      ) {
+        throw error;
+      }
+
+      // One rotate + retry: host persists a fresh access token; start() re-reads via accessTokenFactory.
+      await this._options.rotateTokens();
+      await connection.start();
+    }
   }
 
   public async disconnect(): Promise<void> {
@@ -135,10 +150,7 @@ export class TopicHubClient implements ITopicHubClient {
   private createDefaultConnection(url: string): HubConnection {
     const builder: HubConnectionBuilder = new HubConnectionBuilder()
       .withUrl(url, {
-        accessTokenFactory: (): Promise<string> => {
-          const token: string | null | undefined = this._options.getAccessToken?.();
-          return Promise.resolve(token ?? "");
-        },
+        accessTokenFactory: (): Promise<string> => resolveAccessToken(this._options),
       })
       .configureLogging(LogLevel.Warning);
 

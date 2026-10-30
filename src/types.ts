@@ -43,6 +43,13 @@ export type TopicHubClientOptions = {
   getAccessToken?: () => string | null | undefined;
 
   /**
+   * Host-owned session rotation. Invoked before each negotiate/reconnect token read and
+   * once more after a 401 on `connect()`. Persist new tokens in the host store; this client
+   * never sees the refresh token. No-op when the access token is still valid.
+   */
+  rotateTokens?: () => Promise<void>;
+
+  /**
    * When true (default), enables `withAutomaticReconnect()` on the hub connection.
    */
   withAutomaticReconnect?: boolean;
