@@ -65,10 +65,7 @@ export class TopicHubClient implements ITopicHubClient {
     try {
       await connection.start();
     } catch (error: unknown) {
-      if (
-        !isUnauthorizedError(error) ||
-        this._options.rotateTokens === undefined
-      ) {
+      if (!isUnauthorizedError(error) || this._options.rotateTokens === undefined) {
         throw error;
       }
 
