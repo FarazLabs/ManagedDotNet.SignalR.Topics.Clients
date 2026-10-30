@@ -14,9 +14,10 @@ describe("resolveAccessToken", () => {
         order.push("get");
         return accessToken;
       },
-      rotateTokens: async (): Promise<void> => {
+      rotateTokens: (): Promise<void> => {
         order.push("rotate");
         accessToken = "fresh";
+        return Promise.resolve();
       },
     });
 

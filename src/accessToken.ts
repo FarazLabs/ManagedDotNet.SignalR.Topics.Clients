@@ -24,11 +24,7 @@ export function isUnauthorizedError(error: unknown): boolean {
       return true;
     }
 
-    if (
-      typeof current === "object" &&
-      "statusCode" in current &&
-      (current as { statusCode: unknown }).statusCode === 401
-    ) {
+    if (typeof current === "object" && "statusCode" in current && current.statusCode === 401) {
       return true;
     }
 
