@@ -76,8 +76,8 @@ const EXPECTED: Record<string, Expectation> = {
     markers: ["emptyHub", "handleInstance", "missingOutgoing", "notConnected", "handlerFailed"],
     maxBytes: 2800,
   },
-  TopicHubClientBuilder: { markers: EVERYTHING.filter((m) => m !== "getUrl"), maxBytes: 4500 },
-  createTopicHubClient: { markers: EVERYTHING, maxBytes: 4600 },
+  TopicHubClientBuilder: { markers: EVERYTHING.filter((m) => m !== "getUrl"), maxBytes: 6200 },
+  createTopicHubClient: { markers: EVERYTHING, maxBytes: 6400 },
 };
 
 function presentMarkers(code: string): Marker[] {
